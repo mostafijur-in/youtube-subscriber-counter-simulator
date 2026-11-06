@@ -1,0 +1,18 @@
+# Operating system and editor files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*.log
+.idea/
+.vscode/
+
+# Local settings and personal assets
+.env
+.env.*
+!.env.example
+.local/
+img/channel_profile.jpg
+
+# Generated release archives
+release/

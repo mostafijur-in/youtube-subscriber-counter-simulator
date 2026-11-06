@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<!-- SPDX-License-Identifier: MIT -->
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="An unofficial subscriber counter simulator for demos, recordings, and front-end practice. All subscriber counts are simulated.">
+  <title>Demo Channel — Subscriber counter simulator</title>
+  <link rel="icon" type="image/svg+xml" href="img/demo-avatar.svg">
+  <style>
+    :root {
+      --live-color: #2fa5cb;
+      --digit-slide-duration: 2400ms;
+    }
+
+    @font-face {
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url("fonts/Roboto-Regular.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url("fonts/Roboto-Medium.ttf") format("truetype");
+    }
+
+    @font-face {
+      font-family: Roboto;
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url("fonts/Roboto-Bold.ttf") format("truetype");
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: #fff;
+      color: #0f0f0f;
+      font-family: Roboto, Arial, sans-serif;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      min-height: 100dvh;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      flex: 0 0 67px;
+      padding: 0 28px 0 24px;
+      border-top: 1px solid #d5d5d5;
+      border-bottom: 1px solid #e5e5e5;
+      gap: 24px;
+      white-space: nowrap;
+    }
+
+    .toolbar-icon {
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+
+    .toolbar > .toolbar-icon {
+      margin-right: 4px;
+    }
+
+    .toolbar svg {
+      width: 24px;
+      height: 24px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .toolbar-title {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    .report {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      height: 44px;
+      margin-left: -8px;
+      padding-left: 16px;
+      border-left: 1px solid #e5e5e5;
+    }
+
+    .report-label {
+      color: #606060;
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .report-title {
+      font-size: 16px;
+      line-height: 22px;
+    }
+
+    .toolbar-actions {
+      display: flex;
+      gap: 20px;
+      margin-left: auto;
+    }
+
+    .banner {
+      position: relative;
+      flex: 0 0 118px;
+      margin-top: 24px;
+      background: #f4f4f4;
+    }
+
+    .status {
+      position: absolute;
+      top: 6px;
+      left: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 0;
+      color: #606060;
+      font-size: 14px;
+      line-height: 20px;
+    }
+
+    .status-text {
+      padding-top: 12px;
+      margin-left: -4px;
+    }
+
+    .dot {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      color: var(--live-color);
+      flex: 0 0 auto;
+    }
+
+    .dot::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border: 3px solid currentColor;
+      border-radius: 50%;
+      /* One 2-second pulse, followed by 7 seconds with no ring. */
+      animation: live-pulse 9s ease-out infinite;
+    }
+
+    .dot::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    @keyframes live-pulse {
+      from { transform: scale(0.2); opacity: 0.65; }
+      22.2222%, to { transform: scale(1); opacity: 0; }
+    }
+
+    .logo {
+      position: absolute;
+      top: 21px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: block;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 300px;
+    }
+
+    .avatar-wrap {
+      width: 80px;
+      height: 80px;
+      margin-top: -40px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex: 0 0 auto;
+      background: #1495f2;
+      box-shadow: 0 0 0 8px #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    .avatar {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+    }
+
+    .name {
+      margin: 13px 0 0;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    .count-wrap {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding-bottom: 32px;
+    }
+
+    .count {
+      display: flex;
+      height: 116px;
+      overflow: hidden;
+      clip-path: inset(0);
+      font-size: 98px;
+      font-weight: 700;
+      line-height: 116px;
+      letter-spacing: -1px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .digit {
+      display: inline-grid;
+      grid-template-rows: minmax(0, 1fr);
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .digit-face {
+      grid-area: 1 / 1;
+      min-height: 0;
+    }
+
+    .digit-in {
+      animation: digit-in var(--digit-slide-duration) cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    .digit-out {
+      animation: digit-out var(--digit-slide-duration) cubic-bezier(0.4, 0, 0.2, 1) both;
+    }
+
+    @keyframes digit-in {
+      from { transform: translateY(var(--enter-from)); }
+      to { transform: translateY(0); }
+    }
+
+    @keyframes digit-out {
+      from { transform: translateY(0); }
+      to { transform: translateY(var(--leave-to)); }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .label {
+      margin-top: 18px;
+      color: #606060;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    .growth {
+      flex: 0 0 63px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid #e9e9e9;
+      padding: 12px 15% 8px;
+    }
+
+    .growth-title {
+      font-size: 16px;
+      font-weight: 500;
+      line-height: 22px;
+    }
+
+    .growth-sub {
+      margin-top: 2px;
+      color: #757575;
+      font-size: 12px;
+      line-height: 18px;
+    }
+
+    .chevron {
+      width: 36px;
+      height: 36px;
+      margin-right: 8px;
+      border: 1px solid #e5e5e5;
+      border-radius: 3px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    @media (max-width: 600px) {
+      .toolbar {
+        display: grid;
+        grid-template-columns: 24px max-content minmax(0, 1fr) 24px;
+        padding: 0 12px;
+        gap: 8px;
+      }
+      .toolbar-icon { width: 24px; }
+      .toolbar > .toolbar-icon { margin-right: 0; }
+      .toolbar-title { font-size: 14px; }
+      .report { padding-left: 10px; gap: 4px; margin-left: 0; }
+      .report svg { width: 18px; flex-shrink: 0; }
+      .report-title { font-size: 12px; line-height: 18px; white-space: normal; }
+      .toolbar-actions { margin-left: 0; }
+      .feedback { display: none; }
+      .count { height: 96px; font-size: 80px; line-height: 96px; }
+      .growth { padding-left: 24px; padding-right: 24px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .dot::before { animation: none; opacity: 0; }
+      .digit-in, .digit-out { animation-duration: 1ms; }
+    }
+  </style>
+</head>
+<body>
+  <header class="toolbar">
+    <span class="toolbar-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M5 6h14M5 12h14M5 18h14"/></svg>
+    </span>
+    <div class="toolbar-title">Advanced mode</div>
+    <div class="report">
+      <div>
+        <div class="report-label">Report</div>
+        <div class="report-title">Live subscriber count</div>
+      </div>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </div>
+    <div class="toolbar-actions" aria-hidden="true">
+      <span class="toolbar-icon feedback">
+        <svg viewBox="0 0 24 24"><path d="M7 3h10a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4h-4l-5 3v-3H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4Z"/><path d="M12 7v5m0 3v.1"/></svg>
+      </span>
+      <span class="toolbar-icon">
+        <svg viewBox="0 0 24 24"><path d="m6 6 12 12M18 6 6 18"/></svg>
+      </span>
+    </div>
+  </header>
+
+  <div class="banner">
+    <div class="status">
+      <span class="dot" aria-hidden="true"></span>
+      <span class="status-text">Updating<br>live</span>
+    </div>
+    <svg class="logo" width="24" height="18" viewBox="0 0 24 18" aria-hidden="true">
+      <rect x="1" y="3" width="15" height="12" rx="3" fill="currentColor"/>
+      <path d="m18 6 5-3v12l-5-3Z" fill="currentColor"/>
+    </svg>
+  </div>
+
+  <main>
+    <div class="avatar-wrap">
+      <img class="avatar" src="img/demo-avatar.svg" alt="Demo Channel" width="80" height="80">
+    </div>
+    <h1 class="name">Demo Channel</h1>
+    <div class="count-wrap">
+      <div id="count" class="count" aria-hidden="true">9,980</div>
+      <span id="count-status" class="sr-only" role="status" aria-live="polite" aria-atomic="true">9,980 subscribers</span>
+      <div class="label">Subscribers</div>
+    </div>
+  </main>
+
+  <footer class="growth">
+    <div>
+      <div class="growth-title">Channel growth</div>
+      <div class="growth-sub">Simulation · Not live data</div>
+    </div>
+    <div class="chevron" aria-hidden="true">
+      <svg width="14" height="8" viewBox="0 0 10 6">
+        <polyline points="1,5 5,1 9,5" fill="none" stroke="#111" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+    </div>
+  </footer>
+
+  <script>
+    // Demo settings. Counts are simulated locally; no YouTube API is used.
+    const START_COUNT = 9980;
+    const MIN_DELAY_MS = 6000;
+    const MAX_DELAY_MS = 15000;
+    const MILESTONE = 9999;
+    const PAUSE_MS = 6000;
+
+    const countEl = document.querySelector("#count");
+    const countStatus = document.querySelector("#count-status");
+    let subscribers = START_COUNT;
+    let milestoneVisits = 0;
+    let decreasesRemaining = 0;
+
+    function render(previousCount) {
+      const previous = previousCount == null ? "" : previousCount.toLocaleString("en-US");
+      const current = subscribers.toLocaleString("en-US");
+      const increasing = subscribers > previousCount;
+
+      countEl.style.setProperty("--enter-from", increasing ? "100%" : "-100%");
+      countEl.style.setProperty("--leave-to", increasing ? "-100%" : "100%");
+
+      const digits = Array.from(current, (character, index) => {
+        // Align from the right so carries such as 9,999 → 10,000 roll correctly.
+        const oldCharacter = previous[index + previous.length - current.length] || "";
+        const digit = document.createElement("span");
+        const incoming = document.createElement("span");
+        digit.className = "digit";
+        incoming.className = "digit-face";
+        incoming.textContent = character;
+
+        if (previous && character !== oldCharacter) {
+          const outgoing = document.createElement("span");
+          outgoing.className = "digit-face digit-out";
+          outgoing.textContent = oldCharacter;
+          incoming.classList.add("digit-in");
+          digit.append(outgoing);
+          incoming.addEventListener("animationend", () => {
+            outgoing.remove();
+            incoming.classList.remove("digit-in");
+          }, { once: true });
+        }
+
+        digit.append(incoming);
+        return digit;
+      });
+
+      countEl.replaceChildren(...digits);
+      countStatus.textContent = current + " subscribers";
+    }
+
+    function nextDelay() {
+      return MIN_DELAY_MS + Math.random() * (MAX_DELAY_MS - MIN_DELAY_MS);
+    }
+
+    function schedule() {
+      let delay = nextDelay();
+
+      if (subscribers === MILESTONE) {
+        milestoneVisits += 1;
+        if (milestoneVisits === 1) decreasesRemaining = 2;
+        if (milestoneVisits === 2) delay = PAUSE_MS;
+      }
+
+      setTimeout(function () {
+        const previous = subscribers;
+        subscribers += decreasesRemaining > 0 ? -1 : 1;
+        if (decreasesRemaining > 0) decreasesRemaining -= 1;
+        render(previous);
+        schedule();
+      }, delay);
+    }
+
+    render();
+    schedule();
+  </script>
+</body>
+</html>

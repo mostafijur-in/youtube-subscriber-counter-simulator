@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160" viewBox="0 0 160 160">
+  <!-- SPDX-License-Identifier: MIT -->
+  <title>Demo channel avatar</title>
+  <circle cx="80" cy="80" r="80" fill="#1495f2"/>
+  <circle cx="80" cy="59" r="23" fill="#fff"/>
+  <path d="M36 127c0-24 20-40 44-40s44 16 44 40Z" fill="#fff"/>
+</svg>
